@@ -3,10 +3,10 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: WJ941的博客
+title: SenWong的博客
 subtitle:
 description: 前端 front end
-author: wssj941@gmail.com
+author: wangshaosen666@gmail.com
 language: zh-Hans
 timezone: Asia/Shanghai
 
@@ -78,5 +78,5 @@ theme: next
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: git@github.com:WJ941/wj941.github.io.git
+  repo: git@github.com:senwong/senwong.github.io.git
   branch: master
