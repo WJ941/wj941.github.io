@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Vue构造函数vue version: 2.6.10 开发时使用的Vue来源在src&#x2F;platforms下，都以entry开头，本文以src&#x2F;platforms&#x2F;web&#x2F;entry-runtime-with-compiler.js为例。最后被开发者使用的Vue是在原始Vue构造函数的原型上挂载一系列方法和属性后导出的。从entry-runtime-with-compiler.js里不断查看Vue的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="vue-construct-init-mount">
+<meta property="og:url" content="http://yoursite.com/2019/05/19/vue-construct-init-mount/index.html">
+<meta property="og:site_name" content="SenWong的博客">
+<meta property="og:description" content="Vue构造函数vue version: 2.6.10 开发时使用的Vue来源在src&#x2F;platforms下，都以entry开头，本文以src&#x2F;platforms&#x2F;web&#x2F;entry-runtime-with-compiler.js为例。最后被开发者使用的Vue是在原始Vue构造函数的原型上挂载一系列方法和属性后导出的。从entry-runtime-with-compiler.js里不断查看Vue的">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/2019/05/19/vue-construct-init-mount/reactive-in-depth.png">
+<meta property="article:published_time" content="2019-05-19T02:34:36.000Z">
+<meta property="article:modified_time" content="2020-12-25T02:37:10.528Z">
+<meta property="article:author" content="wangshaosen666@gmail.com">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2019/05/19/vue-construct-init-mount/reactive-in-depth.png">
+
+<link rel="canonical" href="http://yoursite.com/2019/05/19/vue-construct-init-mount/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>vue-construct-init-mount | SenWong的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="تشغيل شريط التصفح">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">SenWong的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>الأرشيفات</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/19/vue-construct-init-mount/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="wangshaosen666@gmail.com">
+      <meta itemprop="description" content="前端 front end">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SenWong的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          vue-construct-init-mount
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">نُشر في</span>
+
+              <time title="أُنشأ: 2019-05-19 10:34:36" itemprop="dateCreated datePublished" datetime="2019-05-19T10:34:36+08:00">2019-05-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2020-12-25 10:37:10" itemprop="dateModified" datetime="2020-12-25T10:37:10+08:00">2020-12-25</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Vue构造函数"><a href="#Vue构造函数" class="headerlink" title="Vue构造函数"></a>Vue构造函数</h1><p><code>vue version: 2.6.10</code></p>
+<p>开发时使用的<code>Vue</code>来源在<code>src/platforms</code>下，都以<code>entry</code>开头，本文以<code>src/platforms/web/entry-runtime-with-compiler.js</code>为例。<br>最后被开发者使用的<code>Vue</code>是在原始<code>Vue</code>构造函数的原型上挂载一系列方法和属性后导出的。<br>从<code>entry-runtime-with-compiler.js</code>里不断查看<code>Vue</code>的导入(import)，可以发现<code>Vue</code>构造函数文件路径如下：</p>
+<ol>
+<li><strong><em><code>entry-runtime-with-compiler.js</code></em></strong> </li>
+<li><strong><em><code>src/platforms/web/runtime/index</code></em></strong></li>
+<li><strong><em><code>src/core/index</code></em></strong></li>
+<li><strong><em><code>src/core/instance/index</code></em></strong></li>
+</ol>
+<p>从程序执行路径来看，<code>Vue</code>构造函数依次经历了一下过程：</p>
+<h2 id="src-core-instance-index"><a href="#src-core-instance-index" class="headerlink" title="src/core/instance/index"></a><code>src/core/instance/index</code></h2><h3 id="原始构造函数"><a href="#原始构造函数" class="headerlink" title="原始构造函数"></a>原始构造函数</h3>  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">function Vue (options) &#123;</span><br><span class="line">  if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39; &amp;&amp;</span><br><span class="line">    !(this instanceof Vue)</span><br><span class="line">  ) &#123;</span><br><span class="line">    warn(&#39;Vue is a constructor and should be called with the &#96;new&#96; keyword&#39;)</span><br><span class="line">  &#125;</span><br><span class="line">  this._init(options)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  Vue构造函数来源于<a target="_blank" rel="noopener" href="https://github.com/vuejs/vue/blob/dev/src/core/instance/index.js"><code>src/core/instance/index.js</code></a>，构造函数的内容很简单：<br>    1. 检查是否用<code>new</code>操作构造函数<br>    2. 调用<code>Vue</code>实例的<code>_init</code>函数</p>
+<h3 id="5个mixin函数"><a href="#5个mixin函数" class="headerlink" title="5个mixin函数"></a>5个<code>mixin</code>函数</h3><p>在构造函数之后，紧接着的是5个<code>mixin</code>函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">initMixin(Vue)</span><br><span class="line">stateMixin(Vue)</span><br><span class="line">eventsMixin(Vue)</span><br><span class="line">lifecycleMixin(Vue)</span><br><span class="line">renderMixin(Vue)</span><br></pre></td></tr></table></figure>
+<ol>
+<li>执行<code>initMixin()</code>挂载的方法: </li>
+</ol>
+<ul>
+<li><code>Vue.prototype._init</code></li>
+</ul>
+<ol start="2">
+<li>执行<code>stateMixin()</code>挂载的方法:</li>
+</ol>
+<ul>
+<li><code>Vue.prototype.$data</code></li>
+<li><code>Vue.prototype.$props</code></li>
+<li><code>Vue.prototype.$set</code></li>
+<li><code>Vue.prototype.$delete</code></li>
+<li><code>Vue.prototype.$watch</code></li>
+</ul>
+<ol start="3">
+<li>执行<code>eventsMixin()</code>挂载的方法:</li>
+</ol>
+<ul>
+<li><code>Vue.prototype.$once</code></li>
+<li><code>Vue.prototype.$on</code></li>
+<li><code>Vue.prototype.$off</code></li>
+<li><code>Vue.prototype.$emit</code></li>
+</ul>
+<ol start="4">
+<li>执行<code>lifecycleMixin()</code>挂载的方法:</li>
+</ol>
+<ul>
+<li><code>Vue.prototype._update</code></li>
+<li><code>Vue.prototype.$forceUpdate</code></li>
+<li><code>Vue.prototype.$destroy</code></li>
+</ul>
+<ol start="5">
+<li>执行<code>renderMixin()</code>挂载的方法:</li>
+</ol>
+<ul>
+<li><code>Vue.prototype.$nextTick</code></li>
+<li><code>Vue.prototype._render</code></li>
+</ul>
+<h2 id="src-core-index-js"><a href="#src-core-index-js" class="headerlink" title="src/core/index.js"></a><code>src/core/index.js</code></h2><p>先调用<code>initGlobalAPI(Vue)</code>，此函数挂载的方法有</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">Vue.config&#x3D;&#123;&#125;</span><br><span class="line">Vue.util &#x3D; &#123;</span><br><span class="line">  warn,</span><br><span class="line">  extend,</span><br><span class="line">  mergeOptions,</span><br><span class="line">  defineReactive</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Vue.set &#x3D; set</span><br><span class="line">Vue.delete &#x3D; del</span><br><span class="line">Vue.nextTick &#x3D; nextTick</span><br><span class="line">Vue.observable &#x3D; () &#x3D;&gt; &#123;&#125;</span><br><span class="line">Vue.options &#x3D; &#123;</span><br><span class="line">  components: &#123; keepAlive &#125;,</span><br><span class="line">  directives: &#123;&#125;,</span><br><span class="line">  filters: &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line">Vue.use &#x3D; () &#x3D;&gt; &#123;&#125;</span><br><span class="line">Vue.mixin &#x3D; () &#x3D;&gt; &#123;&#125;</span><br><span class="line">Vue.extend &#x3D; () &#x3D;&gt; &#123;&#125;</span><br><span class="line">Vue.component &#x3D; () &#x3D;&gt; &#123;&#125;</span><br><span class="line">Vue.directive &#x3D; () &#x3D;&gt; &#123;&#125;</span><br><span class="line">Vue.filter &#x3D; () &#x3D;&gt; &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>然后挂载2个原型上的方法和1个静态方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Vue.prototype.$isServer</span><br><span class="line">Vue.prototype.$ssrContext</span><br><span class="line">Vue.FunctionalRenderContext</span><br></pre></td></tr></table></figure>
+
+<h2 id="src-platforms-web-runtime-index-js"><a href="#src-platforms-web-runtime-index-js" class="headerlink" title="src/platforms/web/runtime/index.js"></a><code>src/platforms/web/runtime/index.js</code></h2><p>在<code>src/platforms/web/runtime/index.js</code>里挂载的方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Vue.prototype.$mount</span><br><span class="line">Vue.options.directives &#x3D; &#123; model, show &#125;</span><br><span class="line">Vue.options.components &#x3D; &#123; keepAlive, Transition, TransitionGroup &#125;</span><br><span class="line">Vue.prototype.__patch__ &#x3D; inBrowser ? patch : noop</span><br></pre></td></tr></table></figure>
+<h2 id="entry-runtime-with-compiler-js"><a href="#entry-runtime-with-compiler-js" class="headerlink" title="entry-runtime-with-compiler.js"></a>entry-runtime-with-compiler.js</h2><p>在上一步的<code>$mount</code>基础之上加上额外功能封装<code>$mount</code>，还挂载了1个静态方法<code>Vue.compile</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Vue.prototype.$mount</span><br><span class="line">Vue.compile</span><br></pre></td></tr></table></figure>
+<p>至此<code>Vue</code>构造函数构建完毕。</p>
+<hr>
+<h1 id="new-Vue-实例化过程"><a href="#new-Vue-实例化过程" class="headerlink" title="new Vue()实例化过程"></a>new Vue()实例化过程</h1><p><code>Vue</code>的构造函数就执行一个操作<code>this._init()</code>。</p>
+<h2 id="Vue-prototype-init函数"><a href="#Vue-prototype-init函数" class="headerlink" title="Vue.prototype._init函数"></a><code>Vue.prototype._init</code>函数</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">Vue.prototype._init &#x3D; function (options?: Object) &#123;</span><br><span class="line">  const vm: Component &#x3D; this</span><br><span class="line">  vm._uid &#x3D; uid++</span><br><span class="line"></span><br><span class="line">  let startTag, endTag</span><br><span class="line">  &#x2F;* istanbul ignore if *&#x2F;</span><br><span class="line">  if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39; &amp;&amp; config.performance &amp;&amp; mark) &#123;</span><br><span class="line">    startTag &#x3D; &#96;vue-perf-start:$&#123;vm._uid&#125;&#96;</span><br><span class="line">    endTag &#x3D; &#96;vue-perf-end:$&#123;vm._uid&#125;&#96;</span><br><span class="line">    mark(startTag)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;&#x2F; a flag to avoid this being observed</span><br><span class="line">  vm._isVue &#x3D; true</span><br><span class="line">  &#x2F;&#x2F; merge options</span><br><span class="line">  if (options &amp;&amp; options._isComponent) &#123;</span><br><span class="line">    &#x2F;&#x2F; optimize internal component instantiation</span><br><span class="line">    &#x2F;&#x2F; since dynamic options merging is pretty slow, and none of the</span><br><span class="line">    &#x2F;&#x2F; internal component options needs special treatment.</span><br><span class="line">    initInternalComponent(vm, options)</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    console.log(&#39;resolveConstructorOptions: &#39;, resolveConstructorOptions(vm.constructor));</span><br><span class="line">    vm.$options &#x3D; mergeOptions(</span><br><span class="line">      resolveConstructorOptions(vm.constructor),</span><br><span class="line">      options || &#123;&#125;,</span><br><span class="line">      vm</span><br><span class="line">    )</span><br><span class="line">  &#125;</span><br><span class="line">  &#x2F;* istanbul ignore else *&#x2F;</span><br><span class="line">  if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39;) &#123;</span><br><span class="line">    initProxy(vm)</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    vm._renderProxy &#x3D; vm</span><br><span class="line">  &#125;</span><br><span class="line">  &#x2F;&#x2F; expose real self</span><br><span class="line">  vm._self &#x3D; vm</span><br><span class="line">  initLifecycle(vm)</span><br><span class="line">  initEvents(vm)</span><br><span class="line">  initRender(vm)</span><br><span class="line">  callHook(vm, &#39;beforeCreate&#39;)</span><br><span class="line">  initInjections(vm) &#x2F;&#x2F; resolve injections before data&#x2F;props</span><br><span class="line">  initState(vm)</span><br><span class="line">  initProvide(vm) &#x2F;&#x2F; resolve provide after data&#x2F;props</span><br><span class="line">  callHook(vm, &#39;created&#39;)</span><br><span class="line"></span><br><span class="line">  &#x2F;* istanbul ignore if *&#x2F;</span><br><span class="line">  if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39; &amp;&amp; config.performance &amp;&amp; mark) &#123;</span><br><span class="line">    vm._name &#x3D; formatComponentName(vm, false)</span><br><span class="line">    mark(endTag)</span><br><span class="line">    measure(&#96;vue $&#123;vm._name&#125; init&#96;, startTag, endTag)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (vm.$options.el) &#123;</span><br><span class="line">    vm.$mount(vm.$options.el)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="vm-uid-uid"><a href="#vm-uid-uid" class="headerlink" title="vm._uid = uid++"></a><code>vm._uid = uid++</code></h3><p>每一个<code>Vue</code>实例都有一个id</p>
+<h3 id="vm-isVue-true"><a href="#vm-isVue-true" class="headerlink" title="vm._isVue = true"></a><code>vm._isVue = true</code></h3><p><code>_isVue</code>在<code>observer</code>函数里被用到，如果一个值的<code>_isVue</code>为<code>true</code>，只就不会被观测</p>
+<h3 id="merge-options"><a href="#merge-options" class="headerlink" title="merge options"></a>merge options</h3><p>把<code>Vue.options</code>合并到<code>vm.options</code>，每一个<code>Vue</code>实例上都会有<code>Vue.options</code>的内容。此处<code>Vue.options</code>为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Vue.options &#x3D; &#123;</span><br><span class="line">  components: &#123; keepAlive, Transition, TransitionGroup &#125;,</span><br><span class="line">  directives: &#123; model, show &#125;,</span><br><span class="line">  filters: &#123;&#125;,</span><br><span class="line">  _base: Vue</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li><code>keepAlive</code>在调用<code>src/core/index.js</code>的<code>initGlobalAPI</code>函数时被定义在<code>Vue.options</code>上</li>
+<li><code>Transition</code>和<code>TransitionGroup</code>在调用<code>src/platforms/web/runtime/index.js</code>时被定义到<code>Vue.options</code>上</li>
+</ol>
+<h3 id="renderProxy"><a href="#renderProxy" class="headerlink" title="_renderProxy"></a><code>_renderProxy</code></h3><p>  <code>_renderProxy</code>的作用是在render期间代替<code>vm</code>，检测引用错误。</p>
+<h3 id="vm-self-vm"><a href="#vm-self-vm" class="headerlink" title="vm._self=vm"></a><code>vm._self=vm</code></h3><h3 id="initLifecycle-vm"><a href="#initLifecycle-vm" class="headerlink" title="initLifecycle(vm)"></a><code>initLifecycle(vm)</code></h3><p><code>initLifecycle</code>的作用是定义了一些实例变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">vm.$parent &#x3D; parent</span><br><span class="line">vm.$root &#x3D; parent ? parent.$root : vm</span><br><span class="line"></span><br><span class="line">vm.$children &#x3D; []</span><br><span class="line">vm.$refs &#x3D; &#123;&#125;</span><br><span class="line"></span><br><span class="line">vm._watcher &#x3D; null</span><br><span class="line">vm._inactive &#x3D; null</span><br><span class="line">vm._directInactive &#x3D; false</span><br><span class="line">vm._isMounted &#x3D; false</span><br><span class="line">vm._isDestroyed &#x3D; false</span><br><span class="line">vm._isBeingDestroyed &#x3D; false</span><br></pre></td></tr></table></figure>
+<p>带<code>$</code>符号的属性都是<a target="_blank" rel="noopener" href="https://vuejs.org/v2/api/#vm-root">官方文档定义的api</a></p>
+<p><code>_watcher</code>是在<code>Watcher</code>的构造函数中被定义，<code>vm</code>对<code>Watcher</code>实例的引用</p>
+<h3 id="initEvents-vm"><a href="#initEvents-vm" class="headerlink" title="initEvents(vm)"></a><code>initEvents(vm)</code></h3><p><code>initEvents</code>定义了与事件处理有关的变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vm._events &#x3D; Object.create(null)</span><br><span class="line">vm._hasHookEvent &#x3D; false</span><br></pre></td></tr></table></figure>
+<h3 id="initRender-vm"><a href="#initRender-vm" class="headerlink" title="initRender(vm)"></a><code>initRender(vm)</code></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">vm._vnode &#x3D; null &#x2F;&#x2F; the root of the child tree</span><br><span class="line">vm._staticTrees &#x3D; null &#x2F;&#x2F; v-once cached trees</span><br><span class="line">vm.$slots &#x3D; &#123;...&#125;</span><br><span class="line">vm.$scopedSlots &#x3D; emptyObject</span><br><span class="line">vm._c &#x3D; () &#x3D;&gt; &#123;&#125;</span><br><span class="line">vm.$createElement &#x3D; () &#x3D;&gt; &#123;&#125;</span><br><span class="line">vm.$attrs &#x3D; &#123;...&#125;</span><br><span class="line">vm.$listeners &#x3D; &#123;...&#125;</span><br></pre></td></tr></table></figure>
+<p>此处<code>$attrs</code>和<code>$listeners</code>是reactive的。</p>
+<h3 id="callHook-vm-39-beforeCreate-39"><a href="#callHook-vm-39-beforeCreate-39" class="headerlink" title="callHook(vm, &#39;beforeCreate&#39;)"></a><code>callHook(vm, &#39;beforeCreate&#39;)</code></h3><h3 id="initInjections-vm"><a href="#initInjections-vm" class="headerlink" title="initInjections(vm)"></a><code>initInjections(vm)</code></h3><p>把<code>inject</code>包括的属性响应式定义到实例上</p>
+<h3 id="initState，"><a href="#initState，" class="headerlink" title="initState，"></a><code>initState</code>，</h3><p>初始化 <code>props</code>, <code>methods</code>, <code>data</code>, <code>computed</code>和<code>watch</code>。</p>
+<h3 id="initProvide-vm"><a href="#initProvide-vm" class="headerlink" title="initProvide(vm)"></a><code>initProvide(vm)</code></h3><p>把<code>provide</code>属性赋值到<code>vm._provided</code>。</p>
+<h3 id="callHook-vm-39-created-39"><a href="#callHook-vm-39-created-39" class="headerlink" title="callHook(vm, &#39;created&#39;)"></a><code>callHook(vm, &#39;created&#39;)</code></h3><h3 id="mount"><a href="#mount" class="headerlink" title="$mount"></a><code>$mount</code></h3><h1 id="mount的过程"><a href="#mount的过程" class="headerlink" title="mount的过程"></a><code>mount</code>的过程</h1><h2 id="entry-runtime-with-compiler-js-1"><a href="#entry-runtime-with-compiler-js-1" class="headerlink" title="entry-runtime-with-compiler.js"></a><code>entry-runtime-with-compiler.js</code></h2><p>这里是把<code>el</code>或者<code>template</code>里的字符串转换成<code>render function</code>并赋值到<code>$options.render</code>。</p>
+<h2 id="mountComponent函数"><a href="#mountComponent函数" class="headerlink" title="mountComponent函数"></a><code>mountComponent</code>函数</h2><ol>
+<li>检查<code>$options.render</code>是否存在</li>
+<li><code>callHook(vm, &#39;beforeMount&#39;)</code></li>
+<li>更新组件的函数<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">updateComponent &#x3D; () &#x3D;&gt; &#123;</span><br><span class="line">  vm._update(vm._render(), hydrating)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<code>vm.render()</code>的作用是执行<code>$options.render</code>函数，返回一个<code>VNode</code>实例<br><code>vm._update</code>的作用是执行<code>vm.__patch__</code>函数，把<code>vnode</code>更新到<code>html</code>中</li>
+<li>生成一个新的Watcher实例<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">new Watcher(vm, updateComponent, noop, &#123;</span><br><span class="line">  before () &#123;</span><br><span class="line">    if (vm._isMounted &amp;&amp; !vm._isDestroyed) &#123;</span><br><span class="line">      callHook(vm, &#39;beforeUpdate&#39;)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;, true &#x2F;* isRenderWatcher *&#x2F;)</span><br></pre></td></tr></table></figure>
+<h2 id="Watcher类"><a href="#Watcher类" class="headerlink" title="Watcher类"></a>Watcher类</h2><h3 id="Watcher类构造函数"><a href="#Watcher类构造函数" class="headerlink" title="Watcher类构造函数"></a>Watcher类构造函数</h3><h4 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">constructor (</span><br><span class="line">  vm: Component,</span><br><span class="line">  expOrFn: string | Function</span><br><span class="line">  cb: Function, </span><br><span class="line">  options?: ?Object,</span><br><span class="line">  isRenderWatcher?: boolean</span><br><span class="line">) &#123;...&#125;</span><br></pre></td></tr></table></figure></li>
+<li><code>vm</code>是<code>Vue</code>实例，使用在<code>expOrFn</code>和<code>cb</code>需要用到；</li>
+<li><code>expOfFn</code>可以是一个字符串路径或者一个函数（<a target="_blank" rel="noopener" href="https://cn.vuejs.org/v2/api/#vm-watch">官方文档</a>）<br><code>cb</code>是以<code>newVal</code>和<code>oldVal</code>为参数的回调函数。</li>
+</ol>
+<h4 id="内容"><a href="#内容" class="headerlink" title="内容"></a>内容</h4><p>构造函数里重要的是赋值<code>this.getter</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">if (typeof expOrFn &#x3D;&#x3D;&#x3D; &#39;function&#39;) &#123;</span><br><span class="line">  this.getter &#x3D; expOrFn</span><br><span class="line">&#125; else &#123;</span><br><span class="line">  this.getter &#x3D; parsePath(expOrFn)</span><br><span class="line">  if (!this.getter) &#123;</span><br><span class="line">    this.getter &#x3D; noop</span><br><span class="line">    process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39; &amp;&amp; warn(...)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果<code>expOrFn</code>是的函数，直接赋值给<code>getter</code>，如果是<code>string</code>则通过<code>parsePath</code>转换。<code>string</code>类型的<code>expOrFn</code>官方给的例子是<code>a.b.c</code>。</p>
+<p><code>parsePath</code>函数在<code>src/core/util/lang.js</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">export function parsePath (path: string): any &#123;</span><br><span class="line">  if (bailRE.test(path)) &#123;</span><br><span class="line">    return</span><br><span class="line">  &#125;</span><br><span class="line">  const segments &#x3D; path.split(&#39;.&#39;)</span><br><span class="line">  return function (obj) &#123;</span><br><span class="line">    for (let i &#x3D; 0; i &lt; segments.length; i++) &#123;</span><br><span class="line">      if (!obj) return</span><br><span class="line">      obj &#x3D; obj[segments[i]]</span><br><span class="line">    &#125;</span><br><span class="line">    return obj</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第一步是做<code>unicode</code>检查</p>
+<p>返回一个匿名函数赋值给<code>getter</code>，这个函数的参数是一个<code>obj</code>，<code>getter</code>在<code>Watcher</code>类的<code>get</code>方法里被调用的时候被传递的唯一参数是<code>vm</code>，相当于<code>vm[a][b][c]</code>。</p>
+<p>再回到<code>Watcher</code>类的构造函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">this.value &#x3D; this.lazy</span><br><span class="line">  ? undefined</span><br><span class="line">  : this.get()</span><br></pre></td></tr></table></figure>
+<p><code>this.lazy</code>是在构造函数的参数<code>options</code>定义的，如果是lazy的，只有当water被访问的时候才执行<code>this.get()</code>，否则<code>Watcher</code>实例化的时候就执行<code>this.get()</code></p>
+<h4 id="get函数"><a href="#get函数" class="headerlink" title="get函数"></a>get函数</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">get () &#123;</span><br><span class="line">  pushTarget(this)</span><br><span class="line">  let value</span><br><span class="line">  const vm &#x3D; this.vm</span><br><span class="line">  try &#123;</span><br><span class="line">    value &#x3D; this.getter.call(vm, vm)</span><br><span class="line">  &#125; catch (e) &#123;</span><br><span class="line">    if (this.user) &#123;</span><br><span class="line">      handleError(e, vm, &#96;getter for watcher &quot;$&#123;this.expression&#125;&quot;&#96;)</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      throw e</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; finally &#123;</span><br><span class="line">    &#x2F;&#x2F; &quot;touch&quot; every property so they are all tracked as</span><br><span class="line">    &#x2F;&#x2F; dependencies for deep watching</span><br><span class="line">    if (this.deep) &#123;</span><br><span class="line">      traverse(value)</span><br><span class="line">    &#125;</span><br><span class="line">    popTarget()</span><br><span class="line">    this.cleanupDeps()</span><br><span class="line">  &#125;</span><br><span class="line">  return value</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>get</code>函数第一步就是<code>pushTarget(this)</code>，作用就是把<code>this</code>赋值到<code>Dep.target</code>,<code>Dep.target</code>是用来保存一个函数，当有响应式数据(被<code>defineReactive</code>调用过的数据)被取值（调用其<code>get</code>函数）时，会调用数据内部<code>dep</code>实例的<code>depend</code>方法收集依赖，把<code>Dep.target</code>添加到<code>dep.subs[]</code>数组里。<br>当响应式数据被改变时会调用数据内部<code>dep</code>实例的<code>notify</code>方法，<code>notify</code>方法行为就是遍历<code>dep.subs[]</code>数组，调用数组里每个元素（即<code>Watcher</code>实例）的<code>update</code>方法，<code>update</code>方法重新调用<code>watcher.getter()</code>完成数据更新。</p>
+<p>对于这个过程<a target="_blank" rel="noopener" href="https://vuejs.org/v2/guide/reactivity.html#How-Changes-Are-Tracked">官方文档</a>给出了一个流程图<br><img src="reactive-in-depth.png" alt="流程图!" title="reactive-in-depth"><br>在<code>vm._init</code>的过程中调用<code>mountComponent</code>，<code>mountComponent</code>的过程中实例化一个<code>Watcher</code>，就会调用<code>updateComponent</code>函数，在调用<code>updateComponent</code>的过程中就会对数据取值，比如说渲染<code>&lt;h1&gt;&#123;&#123; msg &#125;&#125;&lt;/h1&gt;</code>的过程中就会对<code>msg</code>取值，取值的过程中就会调用值的<code>get</code>方法即图中的 <strong><em>Touch</em></strong> 过程，<code>get</code>方法回调用<code>dep.depend</code>,即图中的 <strong><em>Collect as Dependency</em></strong> 过程.</p>
+<p>当数据改变时会调用数据值的<code>set</code>方法（setter），<code>setter</code>会调用<code>dep.notify</code>，<code>notify</code>会执行之前被收集的函数，对于<code>Vue</code>实例就是<code>updateComponent</code>方法，依次执行<code>vm._render</code>和<code>vm._update</code>，完成更新。即图中的 <strong><em>Trigger re-reander</em></strong> 。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/10/ssl/" rel="prev" title="ssl中的key">
+      <i class="fa fa-chevron-left"></i> ssl中的key
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/09/03/React-Router-%E5%8E%9F%E7%90%86/" rel="next" title="React-Router 原理">
+      React-Router 原理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          المحتويات
+        </li>
+        <li class="sidebar-nav-overview">
+          عام
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Vue%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">Vue构造函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#src-core-instance-index"><span class="nav-number">1.1.</span> <span class="nav-text">src&#x2F;core&#x2F;instance&#x2F;index</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%A7%8B%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">1.1.1.</span> <span class="nav-text">原始构造函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5%E4%B8%AAmixin%E5%87%BD%E6%95%B0"><span class="nav-number">1.1.2.</span> <span class="nav-text">5个mixin函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#src-core-index-js"><span class="nav-number">1.2.</span> <span class="nav-text">src&#x2F;core&#x2F;index.js</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#src-platforms-web-runtime-index-js"><span class="nav-number">1.3.</span> <span class="nav-text">src&#x2F;platforms&#x2F;web&#x2F;runtime&#x2F;index.js</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#entry-runtime-with-compiler-js"><span class="nav-number">1.4.</span> <span class="nav-text">entry-runtime-with-compiler.js</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#new-Vue-%E5%AE%9E%E4%BE%8B%E5%8C%96%E8%BF%87%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">new Vue()实例化过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Vue-prototype-init%E5%87%BD%E6%95%B0"><span class="nav-number">2.1.</span> <span class="nav-text">Vue.prototype._init函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#vm-uid-uid"><span class="nav-number">2.1.1.</span> <span class="nav-text">vm._uid &#x3D; uid++</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#vm-isVue-true"><span class="nav-number">2.1.2.</span> <span class="nav-text">vm._isVue &#x3D; true</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#merge-options"><span class="nav-number">2.1.3.</span> <span class="nav-text">merge options</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#renderProxy"><span class="nav-number">2.1.4.</span> <span class="nav-text">_renderProxy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#vm-self-vm"><span class="nav-number">2.1.5.</span> <span class="nav-text">vm._self&#x3D;vm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#initLifecycle-vm"><span class="nav-number">2.1.6.</span> <span class="nav-text">initLifecycle(vm)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#initEvents-vm"><span class="nav-number">2.1.7.</span> <span class="nav-text">initEvents(vm)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#initRender-vm"><span class="nav-number">2.1.8.</span> <span class="nav-text">initRender(vm)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#callHook-vm-39-beforeCreate-39"><span class="nav-number">2.1.9.</span> <span class="nav-text">callHook(vm, &#39;beforeCreate&#39;)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#initInjections-vm"><span class="nav-number">2.1.10.</span> <span class="nav-text">initInjections(vm)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#initState%EF%BC%8C"><span class="nav-number">2.1.11.</span> <span class="nav-text">initState，</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#initProvide-vm"><span class="nav-number">2.1.12.</span> <span class="nav-text">initProvide(vm)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#callHook-vm-39-created-39"><span class="nav-number">2.1.13.</span> <span class="nav-text">callHook(vm, &#39;created&#39;)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mount"><span class="nav-number">2.1.14.</span> <span class="nav-text">$mount</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mount%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">mount的过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#entry-runtime-with-compiler-js-1"><span class="nav-number">3.1.</span> <span class="nav-text">entry-runtime-with-compiler.js</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mountComponent%E5%87%BD%E6%95%B0"><span class="nav-number">3.2.</span> <span class="nav-text">mountComponent函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Watcher%E7%B1%BB"><span class="nav-number">3.3.</span> <span class="nav-text">Watcher类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Watcher%E7%B1%BB%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">3.3.1.</span> <span class="nav-text">Watcher类构造函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E6%95%B0"><span class="nav-number">3.3.1.1.</span> <span class="nav-text">参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E5%AE%B9"><span class="nav-number">3.3.1.2.</span> <span class="nav-text">内容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#get%E5%87%BD%E6%95%B0"><span class="nav-number">3.3.1.3.</span> <span class="nav-text">get函数</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">wangshaosen666@gmail.com</p>
+  <div class="site-description" itemprop="description">前端 front end</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">المقالات</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">wangshaosen666@gmail.com</span>
+</div>
+  <div class="powered-by">تطبيق الموقع <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

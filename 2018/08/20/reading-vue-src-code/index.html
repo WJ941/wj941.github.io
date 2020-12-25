@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Vue构造函数的options属性 12345678910111213Vue.options &#x3D; &amp;#123;    directives: &amp;#123;        model, &#x2F;&#x2F; src&#x2F;platforms&#x2F;web&#x2F;runtime&#x2F;directives&#x2F;model.js        show  &#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue源码阅读">
+<meta property="og:url" content="http://yoursite.com/2018/08/20/reading-vue-src-code/index.html">
+<meta property="og:site_name" content="SenWong的博客">
+<meta property="og:description" content="Vue构造函数的options属性 12345678910111213Vue.options &#x3D; &amp;#123;    directives: &amp;#123;        model, &#x2F;&#x2F; src&#x2F;platforms&#x2F;web&#x2F;runtime&#x2F;directives&#x2F;model.js        show  &#x2F;">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/2018/08/20/reading-vue-src-code/merge_data_result_devtools.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/20/reading-vue-src-code/merge_instance_data_result_devtools.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/20/reading-vue-src-code/merge_hook_result_devtools.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/20/reading-vue-src-code/merge_components_result_devtools.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/20/reading-vue-src-code/merge_watch_result_devtools.png">
+<meta property="article:published_time" content="2018-08-20T05:06:39.000Z">
+<meta property="article:modified_time" content="2020-12-25T02:37:10.524Z">
+<meta property="article:author" content="wangshaosen666@gmail.com">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2018/08/20/reading-vue-src-code/merge_data_result_devtools.png">
+
+<link rel="canonical" href="http://yoursite.com/2018/08/20/reading-vue-src-code/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Vue源码阅读 | SenWong的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="تشغيل شريط التصفح">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">SenWong的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>الأرشيفات</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/20/reading-vue-src-code/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="wangshaosen666@gmail.com">
+      <meta itemprop="description" content="前端 front end">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SenWong的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Vue源码阅读
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">نُشر في</span>
+
+              <time title="أُنشأ: 2018-08-20 13:06:39" itemprop="dateCreated datePublished" datetime="2018-08-20T13:06:39+08:00">2018-08-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2020-12-25 10:37:10" itemprop="dateModified" datetime="2020-12-25T10:37:10+08:00">2020-12-25</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Vue构造函数的options属性</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Vue.options &#x3D; &#123;</span><br><span class="line">    directives: &#123;</span><br><span class="line">        model, &#x2F;&#x2F; src&#x2F;platforms&#x2F;web&#x2F;runtime&#x2F;directives&#x2F;model.js</span><br><span class="line">        show  &#x2F;&#x2F; src&#x2F;platforms&#x2F;web&#x2F;runtime&#x2F;directives&#x2F;show.js</span><br><span class="line">    &#125;,</span><br><span class="line">    components: &#123;</span><br><span class="line">        keepAlive, &#x2F;&#x2F; src&#x2F;core&#x2F;components&#x2F;keep-alive.js</span><br><span class="line">        Transition, &#x2F;&#x2F; src&#x2F;platforms&#x2F;web&#x2F;runtime&#x2F;components&#x2F;transition.js</span><br><span class="line">        TransitionGroup &#x2F;&#x2F; src&#x2F;platforms&#x2F;web&#x2F;runtime&#x2F;components&#x2F;transition-group.js</span><br><span class="line">    &#125;,</span><br><span class="line">    filters: Object.create(null),</span><br><span class="line">    _base:  Vue</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>mergeOptions</code>在<code>Vue.prototype._init</code>, <code>Vue.extend</code>和<code>Vue.mixin</code>三个函数中使用<br><code>Vue.prototype._init</code>在<code>Vue</code>构造函数和<code>Vue.extend</code>中使用</p>
+<h1 id="Vue的合并策略："><a href="#Vue的合并策略：" class="headerlink" title="Vue的合并策略："></a>Vue的合并策略：</h1><p>TL;DR<br>默认合并策略: 子元素没有，返回父元素的；子元素有，返回子元素的值。</p>
+<p>在非生产模式下，<code>el</code>和<code>props</code>采取默认合并策略；</p>
+<p><code>data</code>：返回一个函数，函数运行返回一个对象，把父元素<code>data</code>上有但子元素<code>data</code>没有的值赋值到子元素<code>data</code>上，返回的对象就是新的子元素<code>data</code>；</p>
+<p>生命周期钩子：相当于子元素钩子数组和父元素的钩子数组取并集；</p>
+<p><code>components</code>, <code>directives</code>和<code>filters</code>： 资源的合并是返回一个新对象，把父元素上的值放在新对象的原型链上，子元素的值直接赋值给新对象；</p>
+<p><code>watch</code>: 相当于取并集;</p>
+<p><code>props</code>, <code>methods</code>, <code>inject</code>和<code>computed</code>: 返回一个新对象，先把父元素的值赋值到新对象上，再遍历子元素，把子元素的值覆盖到新对象上；</p>
+<p><code>provide</code>： 和<code>data</code>类似。</p>
+<h2 id="合并el和props："><a href="#合并el和props：" class="headerlink" title="合并el和props："></a>合并<code>el</code>和<code>props</code>：</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39;) &#123;</span><br><span class="line">  strats.el &#x3D; strats.propsData &#x3D; function (parent, child, vm, key) &#123;</span><br><span class="line">    if (!vm) &#123;</span><br><span class="line">      warn(</span><br><span class="line">        &#96;option &quot;$&#123;key&#125;&quot; can only be used during instance &#96; +</span><br><span class="line">        &#39;creation with the &#96;new&#96; keyword.&#39;</span><br><span class="line">      )</span><br><span class="line">    &#125;</span><br><span class="line">    return defaultStrat(parent, child)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>el</code>和<code>props</code>的合并只有在<code>new Vue()</code>时使用，策略使用默认策略：子元素没有，返回父元素的；子元素有，返回子元素的值。</p>
+<h2 id="合并data"><a href="#合并data" class="headerlink" title="合并data:"></a>合并<code>data</code>:</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">strats.data &#x3D; function (</span><br><span class="line">  parentVal: any,</span><br><span class="line">  childVal: any,</span><br><span class="line">  vm?: Component</span><br><span class="line">): ?Function &#123;</span><br><span class="line">  if (!vm) &#123;</span><br><span class="line">    if (childVal &amp;&amp; typeof childVal !&#x3D;&#x3D; &#39;function&#39;) &#123;</span><br><span class="line">      process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39; &amp;&amp; warn(</span><br><span class="line">        &#39;The &quot;data&quot; option should be a function &#39; +</span><br><span class="line">        &#39;that returns a per-instance value in component &#39; +</span><br><span class="line">        &#39;definitions.&#39;,</span><br><span class="line">        vm</span><br><span class="line">      )</span><br><span class="line">      </span><br><span class="line">      return parentVal</span><br><span class="line">    &#125;</span><br><span class="line">    return mergeDataOrFn(parentVal, childVal)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return mergeDataOrFn(parentVal, childVal, vm)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>if (!vm) </code>和<code>if (childVal &amp;&amp; typeof childVal !== &#39;function&#39;)</code>表明在<code>Vue.extend</code>和<code>Vue.mixin</code>中<code>data</code>必须<br>为一个函数（Vue构造函数中没有data属性，所以只检查childVal）。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">export function mergeDataOrFn (</span><br><span class="line">  parentVal: any,</span><br><span class="line">  childVal: any,</span><br><span class="line">  vm?: Component</span><br><span class="line">): ?Function &#123;</span><br><span class="line">  if (!vm) &#123;</span><br><span class="line">    &#x2F;&#x2F; in a Vue.extend merge, both should be functions</span><br><span class="line">    if (!childVal) &#123;</span><br><span class="line">      return parentVal</span><br><span class="line">    &#125;</span><br><span class="line">    if (!parentVal) &#123;</span><br><span class="line">      return childVal</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F; when parentVal &amp; childVal are both present,</span><br><span class="line">    &#x2F;&#x2F; we need to return a function that returns the</span><br><span class="line">    &#x2F;&#x2F; merged result of both functions... no need to</span><br><span class="line">    &#x2F;&#x2F; check if parentVal is a function here because</span><br><span class="line">    &#x2F;&#x2F; it has to be a function to pass previous merges.</span><br><span class="line">    return function mergedDataFn () &#123;</span><br><span class="line">      return mergeData(</span><br><span class="line">        typeof childVal &#x3D;&#x3D;&#x3D; &#39;function&#39; ? childVal.call(this, this) : childVal,</span><br><span class="line">        typeof parentVal &#x3D;&#x3D;&#x3D; &#39;function&#39; ? parentVal.call(this, this) : parentVal</span><br><span class="line">      )</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    return function mergedInstanceDataFn () &#123;</span><br><span class="line">      &#x2F;&#x2F; instance merge</span><br><span class="line">      const instanceData &#x3D; typeof childVal &#x3D;&#x3D;&#x3D; &#39;function&#39;</span><br><span class="line">        ? childVal.call(vm, vm)</span><br><span class="line">        : childVal</span><br><span class="line">      const defaultData &#x3D; typeof parentVal &#x3D;&#x3D;&#x3D; &#39;function&#39;</span><br><span class="line">        ? parentVal.call(vm, vm)</span><br><span class="line">        : parentVal</span><br><span class="line">      if (instanceData) &#123;</span><br><span class="line">        return mergeData(instanceData, defaultData)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        return defaultData</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="在没有vm实例情况下"><a href="#在没有vm实例情况下" class="headerlink" title="在没有vm实例情况下"></a>在没有<code>vm</code>实例情况下</h3><p><code>child.options.data</code>不存在返回<code>parent.options.data</code>，比如<code>Vue.extend(&#123;&#125;)</code>，<code>Vue.options.data</code>也不存在，返回一个<code>undefined</code>；<br><code>parent.options.data</code>不存在但是<code>child.options.data</code>存在返回<code>child.options.data</code>，比如</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">const sub &#x3D; Vue.extend(&#123;</span><br><span class="line">  data: () &#x3D;&gt; &#123;</span><br><span class="line">    msg: &quot;hello world&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>在上一步中已经检测childVal必须是一个函数，所以返回结果是一个函数；<br><code>parent.options.data</code>和<code>child.options.data</code>都存在：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">function mergeData (to: Object, from: ?Object): Object &#123;</span><br><span class="line">  if (!from) return to</span><br><span class="line">  let key, toVal, fromVal</span><br><span class="line">  const keys &#x3D; Object.keys(from)</span><br><span class="line">  for (let i &#x3D; 0; i &lt; keys.length; i++) &#123;</span><br><span class="line">    key &#x3D; keys[i]</span><br><span class="line">    toVal &#x3D; to[key]</span><br><span class="line">    fromVal &#x3D; from[key]</span><br><span class="line">    if (!hasOwn(to, key)) &#123;</span><br><span class="line">      set(to, key, fromVal)</span><br><span class="line">    &#125; else if (isPlainObject(toVal) &amp;&amp; isPlainObject(fromVal)) &#123;</span><br><span class="line">      mergeData(toVal, fromVal)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  return to</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>举个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">var Parent &#x3D; Vue.extend(&#123;</span><br><span class="line">  data: function () &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      person: &#123; firstName: &#39;parent first name&#39;, lastName: &#39;parent last name&#39;, &#125;,</span><br><span class="line">      parentHave: &quot;parent have&quot;,</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br><span class="line">var Child &#x3D; Parent.extend(&#123;</span><br><span class="line">  data: function () &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      person: &#123; firstName: &#39;child first name&#39;,  &#125;,</span><br><span class="line">      chidlHave: &quot;child have&quot;,</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>合并后<code>Child.options</code>应该等于</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">function mergedDataFn &#123;</span><br><span class="line">  return &#123;</span><br><span class="line">    person: &#123; firstName: &#39;child first name&#39;, lastName: &#39;parent last name&#39;,&#125;,</span><br><span class="line">    chidlHave: &quot;child have&quot;,</span><br><span class="line">    parentHave: &quot;parent have&quot;,</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在devtools中的结果：</p>
+<img src="/2018/08/20/reading-vue-src-code/merge_data_result_devtools.png" class="">
+
+<h3 id="在有vm实例的情况下"><a href="#在有vm实例的情况下" class="headerlink" title="在有vm实例的情况下"></a>在有<code>vm</code>实例的情况下</h3><p>返回一个<code>mergedInstanceDataFn</code>函数，返回调用<code>mergeData</code>函数合并<code>new Constructor(options)</code>时提供的<code>options.data</code>和<code>Constructor.options.data</code>的值。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">var Parent &#x3D; &#123;</span><br><span class="line">  data: function() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      parent: &quot;parent&quot;,</span><br><span class="line">      both  : &quot;both parent&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">var Child &#x3D; new Vue(&#123;</span><br><span class="line">  mixins: [Parent],</span><br><span class="line">  data: function() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      child: &quot;child&quot;,</span><br><span class="line">      both  : &quot;child parent&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>总之<code>data</code>合并是返回一个函数，运行这个函数返回一个对象，把父元素<code>data</code>上有但子元素<code>data</code>没有的值赋值到子元素<code>data</code>上，返回对象等于新的子元素的<code>data</code>。<br>看下结果</p>
+<img src="/2018/08/20/reading-vue-src-code/merge_instance_data_result_devtools.png" class="">
+
+<h2 id="合并生命周期钩子函数"><a href="#合并生命周期钩子函数" class="headerlink" title="合并生命周期钩子函数"></a>合并生命周期钩子函数</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">export const LIFECYCLE_HOOKS &#x3D; [</span><br><span class="line">  &#39;beforeCreate&#39;,</span><br><span class="line">  &#39;created&#39;,</span><br><span class="line">  &#39;beforeMount&#39;,</span><br><span class="line">  &#39;mounted&#39;,</span><br><span class="line">  &#39;beforeUpdate&#39;,</span><br><span class="line">  &#39;updated&#39;,</span><br><span class="line">  &#39;beforeDestroy&#39;,</span><br><span class="line">  &#39;destroyed&#39;,</span><br><span class="line">  &#39;activated&#39;,</span><br><span class="line">  &#39;deactivated&#39;,</span><br><span class="line">  &#39;errorCaptured&#39;</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">function mergeHook (</span><br><span class="line">  parentVal: ?Array&lt;Function&gt;,</span><br><span class="line">  childVal: ?Function | ?Array&lt;Function&gt;</span><br><span class="line">): ?Array&lt;Function&gt; &#123;</span><br><span class="line">  return childVal</span><br><span class="line">    ? parentVal</span><br><span class="line">      ? parentVal.concat(childVal)</span><br><span class="line">      : Array.isArray(childVal)</span><br><span class="line">        ? childVal</span><br><span class="line">        : [childVal]</span><br><span class="line">    : parentVal</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">LIFECYCLE_HOOKS.forEach(hook &#x3D;&gt; &#123;</span><br><span class="line">  strats[hook] &#x3D; mergeHook</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>如果<code>childVal</code>不存在，返回<code>parentVal</code>,<br>如果<code>childVal</code>存在但是<code>parentVal</code>不存在，返回<code>[childVal]</code>,<br>如果<code>childVal</code>和<code>parentVal</code>都存在，返回<code>parentVal.concat(childVal)</code><br>举个例子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">var Parent &#x3D; Vue.extend(&#123;</span><br><span class="line">  mounted: function parentMounted() &#123; &#125;,</span><br><span class="line">  updated: function parentUpdated() &#123; &#125;,</span><br><span class="line">&#125;)</span><br><span class="line">var Child &#x3D; Parent.extend(&#123;</span><br><span class="line">  beforeUpdate: function childBeforeUpdate() &#123; &#125;,</span><br><span class="line">  updated:      function childUpdated() &#123; &#125;,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>在运行后Child.options中钩子函数应该是</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mounted:      [ parentMounted ],</span><br><span class="line">updated:      [ parentUpdated, childUpdated],</span><br><span class="line">beforeUpdate: [ childBeforeUpdate ],</span><br></pre></td></tr></table></figure>
+<p>总之钩子函数是子元素和父元素如果都有，则通过<code>parentVal.concat(childVal)</code>返回一个新数组后给子元素<br>在devtools中查看结果：</p>
+<img src="/2018/08/20/reading-vue-src-code/merge_hook_result_devtools.png" class="">
+
+<h2 id="合并components-directives和filters"><a href="#合并components-directives和filters" class="headerlink" title="合并components, directives和filters"></a>合并<code>components</code>, <code>directives</code>和<code>filters</code></h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">export const ASSET_TYPES &#x3D; [</span><br><span class="line">  &#39;component&#39;,</span><br><span class="line">  &#39;directive&#39;,</span><br><span class="line">  &#39;filter&#39;</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">function mergeAssets (</span><br><span class="line">  parentVal: ?Object,</span><br><span class="line">  childVal: ?Object,</span><br><span class="line">  vm?: Component,</span><br><span class="line">  key: string</span><br><span class="line">): Object &#123;</span><br><span class="line">  const res &#x3D; Object.create(parentVal || null)</span><br><span class="line">  if (childVal) &#123;</span><br><span class="line">    process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39; &amp;&amp; assertObjectType(key, childVal, vm)</span><br><span class="line">    return extend(res, childVal)</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    return res</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ASSET_TYPES.forEach(function (type) &#123;</span><br><span class="line">  strats[type + &#39;s&#39;] &#x3D; mergeAssets</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">export function extend (to: Object, _from: ?Object): Object &#123;</span><br><span class="line">  for (const key in _from) &#123;</span><br><span class="line">    to[key] &#x3D; _from[key]</span><br><span class="line">  &#125;</span><br><span class="line">  return to</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>总结就是返回一个新对象，把Parent的值放在原型链上，再把Child的值重新赋值到这个新对象上，最后返回这个新对象<br>举个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">var Parent &#x3D; Vue.extend(&#123;</span><br><span class="line">  components: &#123;</span><br><span class="line">    &#39;parent-component&#39;: &#123;&#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;)</span><br><span class="line">var Child &#x3D; Parent.extend(&#123;</span><br><span class="line">  components: &#123;</span><br><span class="line">    &#39;child-component&#39;: &#123;&#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>总之资源的合并是返回一个新对象，把父元素上的值放在新对象的原型链上，子元素的值直接赋值给新对象。<br>看下结果</p>
+<img src="/2018/08/20/reading-vue-src-code/merge_components_result_devtools.png" class="">
+<p>（<code>Vue.options.components</code>有3个内置组件）</p>
+<h2 id="合并watch"><a href="#合并watch" class="headerlink" title="合并watch"></a>合并<code>watch</code></h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">strats.watch &#x3D; function (</span><br><span class="line">  parentVal: ?Object,</span><br><span class="line">  childVal: ?Object,</span><br><span class="line">  vm?: Component,</span><br><span class="line">  key: string</span><br><span class="line">): ?Object &#123;</span><br><span class="line">  &#x2F;&#x2F; work around Firefox&#39;s Object.prototype.watch...</span><br><span class="line">  if (parentVal &#x3D;&#x3D;&#x3D; nativeWatch) parentVal &#x3D; undefined</span><br><span class="line">  if (childVal &#x3D;&#x3D;&#x3D; nativeWatch) childVal &#x3D; undefined</span><br><span class="line">  &#x2F;* istanbul ignore if *&#x2F;</span><br><span class="line">  if (!childVal) return Object.create(parentVal || null)</span><br><span class="line">  if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39;) &#123;</span><br><span class="line">    assertObjectType(key, childVal, vm)</span><br><span class="line">  &#125;</span><br><span class="line">  if (!parentVal) return childVal</span><br><span class="line">  const ret &#x3D; &#123;&#125;</span><br><span class="line">  extend(ret, parentVal)</span><br><span class="line">  for (const key in childVal) &#123;</span><br><span class="line">    let parent &#x3D; ret[key]</span><br><span class="line">    const child &#x3D; childVal[key]</span><br><span class="line">    if (parent &amp;&amp; !Array.isArray(parent)) &#123;</span><br><span class="line">      parent &#x3D; [parent]</span><br><span class="line">    &#125;</span><br><span class="line">    ret[key] &#x3D; parent</span><br><span class="line">      ? parent.concat(child)</span><br><span class="line">      : Array.isArray(child) ? child : [child]</span><br><span class="line">  &#125;</span><br><span class="line">  return ret</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>前两行<code>nativeWatch</code>是因为版本号58之前的Firefox有<code>Object.prototype.watch</code>, 为了覆盖它把<code>parentVal</code>和<code>parentVal</code>重置为<code>undefined</code>。<br>如果<code>Child</code>没有<code>watch</code>，返回一个新对象，新对象的原型上有<code>Parent</code>的<code>watch</code>；<br>如果<code>Parent</code>没有<code>watch</code>，返回<code>Child</code>的<code>watch</code>，返回之前assert<code>Child</code>的<code>watch</code>是一个对象；<br>遍历<code>Child</code>的<code>watch</code>里所有key和value，合并在一起；<br>总之<code>watch</code>是子元素和父元素如果有相同的key是通过<code>parentVal.concat(childVal)</code>返回一个新数组后给子元素<br>举个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">var Parent &#x3D; Vue.extend(&#123;</span><br><span class="line">  watch: &#123;</span><br><span class="line">    parent: function parent() &#123;&#125;,</span><br><span class="line">    both  : function bothFromParent() &#123;&#125;,</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br><span class="line">var Child &#x3D; Parent.extend(&#123;</span><br><span class="line">  watch: &#123;</span><br><span class="line">    child: function child() &#123;&#125;,</span><br><span class="line">    both : function bothFromChild() &#123;&#125;,</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>看下结果：</p>
+<img src="/2018/08/20/reading-vue-src-code/merge_watch_result_devtools.png" class="">
+
+<h2 id="合并props-methods-inject和computed"><a href="#合并props-methods-inject和computed" class="headerlink" title="合并props, methods, inject和computed"></a>合并<code>props</code>, <code>methods</code>, <code>inject</code>和<code>computed</code></h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">strats.props &#x3D;</span><br><span class="line">strats.methods &#x3D;</span><br><span class="line">strats.inject &#x3D;</span><br><span class="line">strats.computed &#x3D; function (</span><br><span class="line">  parentVal: ?Object,</span><br><span class="line">  childVal: ?Object,</span><br><span class="line">  vm?: Component,</span><br><span class="line">  key: string</span><br><span class="line">): ?Object &#123;</span><br><span class="line">  if (childVal &amp;&amp; process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39;) &#123;</span><br><span class="line">    assertObjectType(key, childVal, vm)</span><br><span class="line">  &#125;</span><br><span class="line">  if (!parentVal) return childVal</span><br><span class="line">  const ret &#x3D; Object.create(null)</span><br><span class="line">  extend(ret, parentVal)</span><br><span class="line">  if (childVal) extend(ret, childVal)</span><br><span class="line">  return ret</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个策略就是简单的通过2个extend函数，先把父元素的值赋值到新对象上，再遍历子元素，把子元素的值覆盖到新对象上。</p>
+<h2 id="合并provide"><a href="#合并provide" class="headerlink" title="合并provide"></a>合并<code>provide</code></h2><p><code>provide</code>的合并和data类似</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/08/19/JavaScript-prototype-chain/" rel="prev" title="JavaScript原型链">
+      <i class="fa fa-chevron-left"></i> JavaScript原型链
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/10/ssl/" rel="next" title="ssl中的key">
+      ssl中的key <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          المحتويات
+        </li>
+        <li class="sidebar-nav-overview">
+          عام
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Vue%E7%9A%84%E5%90%88%E5%B9%B6%E7%AD%96%E7%95%A5%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">Vue的合并策略：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6el%E5%92%8Cprops%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">合并el和props：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6data"><span class="nav-number">1.2.</span> <span class="nav-text">合并data:</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%B2%A1%E6%9C%89vm%E5%AE%9E%E4%BE%8B%E6%83%85%E5%86%B5%E4%B8%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">在没有vm实例情况下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%9C%89vm%E5%AE%9E%E4%BE%8B%E7%9A%84%E6%83%85%E5%86%B5%E4%B8%8B"><span class="nav-number">1.2.2.</span> <span class="nav-text">在有vm实例的情况下</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.</span> <span class="nav-text">合并生命周期钩子函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6components-directives%E5%92%8Cfilters"><span class="nav-number">1.4.</span> <span class="nav-text">合并components, directives和filters</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6watch"><span class="nav-number">1.5.</span> <span class="nav-text">合并watch</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6props-methods-inject%E5%92%8Ccomputed"><span class="nav-number">1.6.</span> <span class="nav-text">合并props, methods, inject和computed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6provide"><span class="nav-number">1.7.</span> <span class="nav-text">合并provide</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">wangshaosen666@gmail.com</p>
+  <div class="site-description" itemprop="description">前端 front end</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">المقالات</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">wangshaosen666@gmail.com</span>
+</div>
+  <div class="powered-by">تطبيق الموقع <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

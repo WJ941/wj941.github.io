@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Git工作区和文件的标识Git区域Git有2个区域：working directory, staging area。 working directory : 本地编辑区域 staging area : 通过git add命令把本地编辑过或者新的文件的存放到staging area, 准备后续commit Git里文件的标识working directory 里文件状态标识是对应staging a">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git基础">
+<meta property="og:url" content="http://yoursite.com/2018/08/18/Git_base/index.html">
+<meta property="og:site_name" content="SenWong的博客">
+<meta property="og:description" content="Git工作区和文件的标识Git区域Git有2个区域：working directory, staging area。 working directory : 本地编辑区域 staging area : 通过git add命令把本地编辑过或者新的文件的存放到staging area, 准备后续commit Git里文件的标识working directory 里文件状态标识是对应staging a">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/2018/08/18/Git_base/untracked_file.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/18/Git_base/modified_file.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/18/Git_base/lifecycle.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/18/Git_base/git_three_tree.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/18/Git_base/reset-soft.png">
+<meta property="article:published_time" content="2018-08-18T00:49:30.000Z">
+<meta property="article:modified_time" content="2020-12-25T02:37:10.520Z">
+<meta property="article:author" content="wangshaosen666@gmail.com">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2018/08/18/Git_base/untracked_file.png">
+
+<link rel="canonical" href="http://yoursite.com/2018/08/18/Git_base/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Git基础 | SenWong的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="تشغيل شريط التصفح">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">SenWong的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>الأرشيفات</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/18/Git_base/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="wangshaosen666@gmail.com">
+      <meta itemprop="description" content="前端 front end">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SenWong的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Git基础
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">نُشر في</span>
+
+              <time title="أُنشأ: 2018-08-18 08:49:30" itemprop="dateCreated datePublished" datetime="2018-08-18T08:49:30+08:00">2018-08-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2020-12-25 10:37:10" itemprop="dateModified" datetime="2020-12-25T10:37:10+08:00">2020-12-25</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Git工作区和文件的标识"><a href="#Git工作区和文件的标识" class="headerlink" title="Git工作区和文件的标识"></a>Git工作区和文件的标识</h3><h4 id="Git区域"><a href="#Git区域" class="headerlink" title="Git区域"></a>Git区域</h4><p>Git有2个区域：<strong>working directory</strong>, <strong>staging area</strong>。</p>
+<p><strong>working directory</strong> : 本地编辑区域</p>
+<p><strong>staging area</strong> : 通过<code>git add</code>命令把本地编辑过或者新的文件的存放到<strong>staging area</strong>, 准备后续commit</p>
+<h4 id="Git里文件的标识"><a href="#Git里文件的标识" class="headerlink" title="Git里文件的标识"></a>Git里文件的标识</h4><p><strong>working directory</strong> 里文件状态标识是对应staging area，2种状态： <strong>untracked</strong>, <strong>modified</strong>：</p>
+<p><strong>untracked</strong> : 在 <strong>working directory</strong>里新建的文件，还没有通过<code>git add</code>添加到 <strong>staging area</strong>，在命令行运行<code>git status</code>后如下图所示，</p>
+<img src="/2018/08/18/Git_base/untracked_file.png" class="">
+
+<p><strong>modified</strong> : 文件之前已经通过<code>git add</code>添加到 <strong>staging area</strong>，本地修改后还未添加到<strong>staging area</strong>标记为<em>modified</em>，在命令行运行<code>git status</code>后如下图所示，</p>
+<img src="/2018/08/18/Git_base/modified_file.png" class="">
+
+<p><strong>staging area</strong> 里文件状态标识是对应最近的commit，有3种状态： <em>new file</em>， <em>modified</em>, <em>deleted</em></p>
+<h3 id="Git文件生命周期"><a href="#Git文件生命周期" class="headerlink" title="Git文件生命周期"></a>Git文件生命周期</h3><img src="/2018/08/18/Git_base/lifecycle.png" class="">
+<p>工作区的文件分为2个状态：<strong>tracked</strong>和 <strong>untracked</strong></p>
+<p><strong>tracked</strong> 指在staging area或者commit snapshot中的文件，总之是经过Git处理过的文件,其中又分为 <strong>unmodified</strong>, <strong>modified</strong>, or <strong>staged</strong>3种情况</p>
+<h3 id="Git常用命令"><a href="#Git常用命令" class="headerlink" title="Git常用命令"></a>Git常用命令</h3><h4 id="git-add"><a href="#git-add" class="headerlink" title="git add"></a><code>git add</code></h4><p>把working directory里标记为untraked的文件添加到stage</p>
+<h4 id="git-commit"><a href="#git-commit" class="headerlink" title="git commit"></a><code>git commit</code></h4><p> recording a snapshot of your staging area</p>
+<h4 id="git-checkout"><a href="#git-checkout" class="headerlink" title="git checkout"></a><code>git checkout</code></h4><h4 id="git-status"><a href="#git-status" class="headerlink" title="git status"></a><code>git status</code></h4><h4 id="git-reset"><a href="#git-reset" class="headerlink" title="git reset"></a><code>git reset</code></h4><p>Git中3个树（树指文件的集合，不是数据结构中的树）HEAD, Index和工作区</p>
+<p>HEAD指向上次commit的内容，Index指向将要被commit(即暂存区)的内容。 已经commit的内容和暂存区都位于.git文件夹，工作区相当于把.git内容解压出来。<br>图示：</p>
+<img src="/2018/08/18/Git_base/git_three_tree.png" class="">
+<p>当运行<code>git reset</code>时发生了什么？<br>setp 1. 移动HEAD到指定的之前某一个commit</p>
+<img src="/2018/08/18/Git_base/reset-soft.png" class="">
+<p>如果<code>reset</code>指令带<code>--soft</code>选项，<code>reset</code>指令执行到这一步停止。<br>这一步相当于撤销上次的commit，注意此时Index和工作区的内容没有变。</p>
+<p>step 2. 更新暂存区<br>把HEAD指向的内容更新到暂存区， <code>reset</code>指令在默认情况下或者带<code>--mixed</code>选项，<code>reset</code>指令执行到这一步停止。这一步相当于撤销上次add操作。</p>
+<p>setp 3. 更新工作区<br>把暂存区的内容更新到工作区中（执行到这一步需要<code>reset</code>指令带<code>--hard</code>选项）。在操作这一步时是危险的，因为会覆盖工作区的内容，之前工作区的文件不可恢复，需小心使用。</p>
+<p><code>reset</code>指令带文件或文件夹路径时：<br>指令会跳过步骤1（移动HEAD指向），因为HEAD是一个指针,指向commit的整体内容，不能指向部分内容，但是工作区和Index可以部分更新，所以跳过步骤1。<br>比如： <code>git reset file.txt</code>等于<code>git reset --mixed HEAD file.txt</code>。<br>等同于在命令行中运行<code>git status</code>，<code>Changes to be committed</code>标题下提示的这条命令<code>(use &quot;git reset HEAD &lt;file&gt;...&quot; to unstage)</code></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2018/08/19/JavaScript-prototype-chain/" rel="next" title="JavaScript原型链">
+      JavaScript原型链 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          المحتويات
+        </li>
+        <li class="sidebar-nav-overview">
+          عام
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Git%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8C%E6%96%87%E4%BB%B6%E7%9A%84%E6%A0%87%E8%AF%86"><span class="nav-number">1.</span> <span class="nav-text">Git工作区和文件的标识</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Git%E5%8C%BA%E5%9F%9F"><span class="nav-number">1.1.</span> <span class="nav-text">Git区域</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Git%E9%87%8C%E6%96%87%E4%BB%B6%E7%9A%84%E6%A0%87%E8%AF%86"><span class="nav-number">1.2.</span> <span class="nav-text">Git里文件的标识</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Git%E6%96%87%E4%BB%B6%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">2.</span> <span class="nav-text">Git文件生命周期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Git%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">3.</span> <span class="nav-text">Git常用命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#git-add"><span class="nav-number">3.1.</span> <span class="nav-text">git add</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-commit"><span class="nav-number">3.2.</span> <span class="nav-text">git commit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-checkout"><span class="nav-number">3.3.</span> <span class="nav-text">git checkout</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-status"><span class="nav-number">3.4.</span> <span class="nav-text">git status</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-reset"><span class="nav-number">3.5.</span> <span class="nav-text">git reset</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">wangshaosen666@gmail.com</p>
+  <div class="site-description" itemprop="description">前端 front end</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">المقالات</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">wangshaosen666@gmail.com</span>
+</div>
+  <div class="powered-by">تطبيق الموقع <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
