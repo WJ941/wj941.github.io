@@ -9,23 +9,24 @@ tags:
 
 ### 申请微信公众号
 在微信公众号的注册页面申请注册，由于是个人开发测试接口，选择订阅号就行。
-![微信注册](wx-apply.png "wx-apply")
+{% asset_img wx-apply.png %}
+
 
 
 注册完成之后在开发--开发者工具页面选择 公众平台测试账号
-![微信测试账号](wx-test-account.png "wx-test-account")
+{% asset_img wx-test-account.png %}
 
 
 里面有测试的appId和appSecret, 配置安全域名，本地开发时如何配置虚假域名后面说明。
-![JS接口安全域名!](js-sdk-security-host.png "js-sdk-security-host")
+{% asset_img js-sdk-security-host.png %}
 
 ### 配置虚假域名（windos）
 修改c:/Windows/System32/drivers/etc/hosts文件,把127.0.0.1改成自己定义的域名。
-![修改host文件!](modify-host-file.png "modify-host-file")
+{% asset_img modify-host-file.png %}
 
 
 下载代理软件Charles, 配置代理端口，以8888为例。
-![配置代理端口!](proxy-setting.png "proxy-setting")
+{% asset_img proxy-setting.png %}
 
 
 确保手机和电脑连接在统一局域网内，修改手机WiFi的代理配置，地址改成电脑的局域网ip地址，端口为代理软件配置的地址。
